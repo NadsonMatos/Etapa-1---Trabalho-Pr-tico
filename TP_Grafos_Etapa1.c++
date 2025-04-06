@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <iomanip>
+#include <queue>
 
 using namespace std;
 
@@ -130,10 +131,60 @@ int main() {
     }
 
     int V = conjunto_nos.size();
+    int total_conexoes = num_arestas + num_arcos;
+    double densidade = (double)total_conexoes / (V * (V - 1));
 
-    cout << fixed << setprecision(4);
+    set<int> visitado;
+    int componentes = 0;
+    for (set<int>::iterator it = conjunto_nos.begin(); it != conjunto_nos.end(); ++it) {
+        int no = *it;
+        if (visitado.count(no)) continue;
+        componentes++;
+        queue<int> fila;
+        fila.push(no);
+        visitado.insert(no);
+        while (!fila.empty()) {
+            int atual = fila.front(); fila.pop();
+            vector<pair<int, int> >& vizinhos = adjacencia[atual];
+            for (size_t i = 0; i < vizinhos.size(); ++i) {
+                int viz = vizinhos[i].first;
+                if (!visitado.count(viz)) {
+                    visitado.insert(viz);
+                    fila.push(viz);
+                }
+            }
+        }
+    }
+
+    map<int, int> graus;
+    for (map<int, vector<pair<int, int>>>::iterator it = adjacencia.begin(); it != adjacencia.end(); ++it) {
+        int u = it->first;
+        vector<pair<int, int> >& vizinhos = it->second;
+        graus[u] += vizinhos.size();
+        for (size_t i = 0; i < vizinhos.size(); ++i) {
+            int v = vizinhos[i].first;
+            graus[v] += 0;
+        }
+    }
+
+    int grau_min = INFINITO, grau_max = 0;
+    for (map<int, int>::iterator it = graus.begin(); it != graus.end(); ++it) {
+        int g = it->second;
+        grau_min = min(grau_min, g);
+        grau_max = max(grau_max, g);
+    }
+
+
+    cout << fixed << setprecision(4); 
     cout << "1. Quantidade de nos: " << V << endl;
     cout << "2. Quantidade de arestas: " << num_arestas << endl;
     cout << "3. Quantidade de arcos: " << num_arcos << endl;
+    cout << "4. Nos requeridos: " << num_nos_requeridos << endl;
+    cout << "5. Arestas requeridas: " << num_arestas_requeridas << endl;
+    cout << "6. Arcos requeridos: " << num_arcos_requeridos << endl;
+    cout << "7. Densidade: " << densidade << endl;
+    cout << "8. Componentes conectados: " << componentes << endl;
+    cout << "9. Grau minimo: " << grau_min << endl;
+    cout << "10. Grau maximo: " << grau_max << endl;
     return 0;
 }
