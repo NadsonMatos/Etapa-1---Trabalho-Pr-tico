@@ -174,6 +174,58 @@ int main() {
         grau_max = max(grau_max, g);
     }
 
+    map<int, map<int, int>> dist;
+    map<int, map<int, int>> pred;
+
+    for (int u : conjunto_nos) {
+        for (int v : conjunto_nos) {
+            if (u == v) {
+                dist[u][v] = 0;
+                pred[u][v] = -1;
+            } else {
+                dist[u][v] = INFINITO;
+                pred[u][v] = -1;
+            }
+        }
+    }
+
+    for (auto& par : adjacencia) {
+        int u = par.first;
+        for (auto& viz : par.second) {
+            int v = viz.first;
+            int custo = viz.second;
+            if (custo < dist[u][v]) {
+                dist[u][v] = custo;
+                pred[u][v] = u;
+            }
+        }
+    }
+
+    for (int k : conjunto_nos) {
+        for (int i : conjunto_nos) {
+            for (int j : conjunto_nos) {
+                if (dist[i][k] < INFINITO && dist[k][j] < INFINITO) {
+                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        pred[i][j] = pred[k][j];
+                    }
+                }
+            }
+        }
+    }
+    
+    map<int, int> intermediacao;
+    for (int origem : conjunto_nos) {
+        for (int destino : conjunto_nos) {
+            if (origem == destino) continue;
+            for (int k : conjunto_nos) {
+                if (k != origem && k != destino && dist[origem][destino] == dist[origem][k] + dist[k][destino]) {
+                    intermediacao[k]++;
+                }
+            }
+        }
+    }
+
 
     cout << fixed << setprecision(4); 
     cout << "1. Quantidade de nos: " << V << endl;
@@ -186,5 +238,9 @@ int main() {
     cout << "8. Componentes conectados: " << componentes << endl;
     cout << "9. Grau minimo: " << grau_min << endl;
     cout << "10. Grau maximo: " << grau_max << endl;
+    cout << "11. Intermediacao (simplificada):\n";
+    for (map<int, int>::iterator it = intermediacao.begin(); it != intermediacao.end(); ++it) {
+        cout << "   No " << it->first << ": " << it->second << endl;
+    }
     return 0;
 }
