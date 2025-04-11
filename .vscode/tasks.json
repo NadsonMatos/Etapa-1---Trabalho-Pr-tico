@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar Grafo",
+      "type": "shell",
+      "command": "C:/msys64/ucrt64/bin/g++.exe",
+      "args": [
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-g3",
+        "${file}",
+        "-o",
+        "${workspaceFolder}/output/TP_Grafos_Etapa1.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "detail": "Compilação com MSYS2 g++ atualizado"
+    }
+  ]
+}

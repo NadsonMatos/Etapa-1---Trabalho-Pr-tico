@@ -5,8 +5,10 @@
 #include <map>
 #include <vector>
 #include <set>
-#include <iomanip>
 #include <queue>
+#include <limits>
+#include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
@@ -29,12 +31,11 @@ struct Aresta {
 void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& arestas) {
     ifstream arquivo(nomeArquivo);
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo!" << endl;
-        exit(1);
+        cerr << "Erro ao abrir o arquivo: " << nomeArquivo << endl;
+        return;
     }
 
     string linha;
-
     while (getline(arquivo, linha)) {
         if (linha.find("ReN.") != string::npos) break;
     }
@@ -50,7 +51,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
             nos[id] = {id, demanda, true};
         }
     }
-    
+
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("EDGE") != string::npos) break;
         if (linha[0] == 'E') {
@@ -71,7 +72,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
             arestas.push_back({origem, destino, custo, 0, false, false});
         }
     }
-    
+
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("ARC") != string::npos) break;
         if (linha[0] == 'A') {
@@ -96,26 +97,24 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
 
     arquivo.close();
 }
-int main() {
+
+void processarArquivo(const string& nomeArquivo) {
     map<int, No> nos;
     vector<Aresta> arestas;
-    lerArquivo("BHW1.dat", nos, arestas);
+    lerArquivo(nomeArquivo, nos, arestas);
 
-    
+    cout << "\n====== Resultados para o arquivo: " << nomeArquivo << " ======\n";
+
     set<int> conjunto_nos;
-    int num_nos_requeridos = 0;
-    int num_arestas_requeridas = 0;
-    int num_arcos_requeridos = 0;
-    int num_arestas = 0;
-    int num_arcos = 0;
+    int num_nos_requeridos = 0, num_arestas_requeridas = 0, num_arcos_requeridos = 0;
+    int num_arestas = 0, num_arcos = 0;
     map<int, vector<pair<int, int>>> adjacencia;
 
-    for (size_t i = 0; i < arestas.size(); ++i) {
-        Aresta& a = arestas[i];
+    for (auto& a : arestas) {
         conjunto_nos.insert(a.origem);
         conjunto_nos.insert(a.destino);
-        adjacencia[a.origem].push_back(make_pair(a.destino, a.custo));
-        if (!a.direcionada) adjacencia[a.destino].push_back(make_pair(a.origem, a.custo));
+        adjacencia[a.origem].push_back({a.destino, a.custo});
+        if (!a.direcionada) adjacencia[a.destino].push_back({a.origem, a.custo});
         if (a.direcionada) {
             num_arcos++;
             if (a.requerido) num_arcos_requeridos++;
@@ -125,58 +124,28 @@ int main() {
         }
     }
 
-    for (map<int, No>::iterator it = nos.begin(); it != nos.end(); ++it) {
-        conjunto_nos.insert(it->first);
-        if (it->second.requerido) num_nos_requeridos++;
+    for (auto& [id, no] : nos) {
+        conjunto_nos.insert(id);
+        if (no.requerido) num_nos_requeridos++;
     }
 
     int V = conjunto_nos.size();
     int total_conexoes = num_arestas + num_arcos;
     double densidade = (double)total_conexoes / (V * (V - 1));
 
-    set<int> visitado;
-    int componentes = 0;
-    for (set<int>::iterator it = conjunto_nos.begin(); it != conjunto_nos.end(); ++it) {
-        int no = *it;
-        if (visitado.count(no)) continue;
-        componentes++;
-        queue<int> fila;
-        fila.push(no);
-        visitado.insert(no);
-        while (!fila.empty()) {
-            int atual = fila.front(); fila.pop();
-            vector<pair<int, int> >& vizinhos = adjacencia[atual];
-            for (size_t i = 0; i < vizinhos.size(); ++i) {
-                int viz = vizinhos[i].first;
-                if (!visitado.count(viz)) {
-                    visitado.insert(viz);
-                    fila.push(viz);
-                }
-            }
-        }
-    }
-
     map<int, int> graus;
-    for (map<int, vector<pair<int, int>>>::iterator it = adjacencia.begin(); it != adjacencia.end(); ++it) {
-        int u = it->first;
-        vector<pair<int, int> >& vizinhos = it->second;
+    for (auto& [u, vizinhos] : adjacencia) {
         graus[u] += vizinhos.size();
-        for (size_t i = 0; i < vizinhos.size(); ++i) {
-            int v = vizinhos[i].first;
-            graus[v] += 0;
-        }
+        for (auto& [v, _] : vizinhos) graus[v] += 0;
     }
 
     int grau_min = INFINITO, grau_max = 0;
-    for (map<int, int>::iterator it = graus.begin(); it != graus.end(); ++it) {
-        int g = it->second;
+    for (auto& [_, g] : graus) {
         grau_min = min(grau_min, g);
         grau_max = max(grau_max, g);
     }
 
-    map<int, map<int, int>> dist;
-    map<int, map<int, int>> pred;
-
+    map<int, map<int, int>> dist, pred;
     for (int u : conjunto_nos) {
         for (int v : conjunto_nos) {
             if (u == v) {
@@ -189,15 +158,10 @@ int main() {
         }
     }
 
-    for (auto& par : adjacencia) {
-        int u = par.first;
-        for (auto& viz : par.second) {
-            int v = viz.first;
-            int custo = viz.second;
-            if (custo < dist[u][v]) {
-                dist[u][v] = custo;
-                pred[u][v] = u;
-            }
+    for (auto& [u, vizinhos] : adjacencia) {
+        for (auto& [v, custo] : vizinhos) {
+            dist[u][v] = min(dist[u][v], custo);
+            pred[u][v] = u;
         }
     }
 
@@ -213,34 +177,60 @@ int main() {
             }
         }
     }
-    
+
     map<int, int> intermediacao;
     for (int origem : conjunto_nos) {
         for (int destino : conjunto_nos) {
             if (origem == destino) continue;
             for (int k : conjunto_nos) {
-                if (k != origem && k != destino && dist[origem][destino] == dist[origem][k] + dist[k][destino]) {
+                if (k != origem && k != destino &&
+                    dist[origem][destino] == dist[origem][k] + dist[k][destino]) {
                     intermediacao[k]++;
                 }
             }
         }
     }
 
+    double soma = 0;
+    int pares = 0, diametro = 0;
+    for (int i : conjunto_nos) {
+        for (int j : conjunto_nos) {
+            if (i != j && dist[i][j] < INFINITO) {
+                soma += dist[i][j];
+                pares++;
+                diametro = max(diametro, dist[i][j]);
+            }
+        }
+    }
 
-    cout << fixed << setprecision(4); 
-    cout << "1. Quantidade de nos: " << V << endl;
+    double caminho_medio = soma / pares;
+
+    cout << fixed << setprecision(4);
+    cout << "1. Quantidade de vertices: " << V << endl;
     cout << "2. Quantidade de arestas: " << num_arestas << endl;
     cout << "3. Quantidade de arcos: " << num_arcos << endl;
     cout << "4. Nos requeridos: " << num_nos_requeridos << endl;
     cout << "5. Arestas requeridas: " << num_arestas_requeridas << endl;
     cout << "6. Arcos requeridos: " << num_arcos_requeridos << endl;
     cout << "7. Densidade: " << densidade << endl;
-    cout << "8. Componentes conectados: " << componentes << endl;
-    cout << "9. Grau minimo: " << grau_min << endl;
-    cout << "10. Grau maximo: " << grau_max << endl;
-    cout << "11. Intermediacao (simplificada):\n";
-    for (map<int, int>::iterator it = intermediacao.begin(); it != intermediacao.end(); ++it) {
-        cout << "   No " << it->first << ": " << it->second << endl;
+    cout << "8. Grau minimo: " << grau_min << endl;
+    cout << "9. Grau maximo: " << grau_max << endl;
+    cout << "10. Intermediacao (simplificada):" << endl;
+    for (auto& [no,valor] : intermediacao) {
+        cout << "   No " << no << ": " << valor << endl;
     }
+    cout << "11. Caminho medio: " << caminho_medio << endl;
+    cout << "12. Diametro: " << diametro << endl;
+}
+
+int main() {
+    vector<string> arquivos = {
+        "BHW1.dat", "CBMix11.dat", "CBMix12.dat", "BHW2.dat", "CBMix19.dat", "CBMix16.dat"
+    };
+
+    for (const string& nomeArquivo : arquivos) {
+        processarArquivo(nomeArquivo);
+    }
+
     return 0;
 }
