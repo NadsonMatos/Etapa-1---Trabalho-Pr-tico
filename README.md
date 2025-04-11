@@ -1,6 +1,6 @@
 # Trabalho Prático - Grafos - Etapa 1
 
-Este repositório contém dois programas desenvolvidos como parte da disciplina GCC262 - Grafos e suas Aplicações do curso de Sistemas de Informação. O objetivo é analisar e visualizar grafos por meio de duas abordagens complementares:
+Este repositório contém dois programas desenvolvidos como parte da disciplina **GCC262 - Grafos e suas Aplicações** do curso de Sistemas de Informação. O objetivo é analisar e visualizar grafos por meio de duas abordagens complementares:
 
 - **TP_Grafos_Etapa1**: Um programa em C++ que realiza o processamento de grafos, extraindo métricas estruturais e exportando resultados.
 - **Visualiza_Grafos**: Um notebook em Python (Jupyter) que desenha visualmente os grafos a partir dos arquivos processados no "TP_Grafos_Etapa1".
