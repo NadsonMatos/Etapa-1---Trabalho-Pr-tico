@@ -1,3 +1,13 @@
+/*
+ * Autor: Izac Moreira e Nadson Matos
+ * Curso: Sistemas de Informação
+ * Projeto: Trabalho Prático - Grafos -  Etapa 1 
+ * Data: 11 de abril de 2025
+ * Descrição: Este programa lê arquivos de grafos no formato .dat,
+ *            calcula métricas estruturais (grau, densidade, caminho médio, etc.),
+ *            aplica o algoritmo de Floyd-Warshall e exporta a visualização.
+ */
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,14 +22,17 @@
 
 using namespace std;
 
+// Definimos um valor grande para representar "infinito"
 const int INFINITO = 1e9;
 
+// Estrutura que representa um nó (vértice) do grafo
 struct No {
     int id;
     int demanda = 0;
-    bool requerido = false;
+    bool requerido = false; // Indica se o nó é obrigatório
 };
 
+// Estrutura que representa uma aresta ou arco do grafo
 struct Aresta {
     int origem, destino;
     int custo;
@@ -28,6 +41,7 @@ struct Aresta {
     bool direcionada = false;
 };
 
+// Função para ler um arquivo .dat e preencher as estruturas de nós e arestas
 void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& arestas) {
     ifstream arquivo(nomeArquivo);
     if (!arquivo.is_open()) {
@@ -36,10 +50,13 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
     }
 
     string linha;
+
+    // Lê até encontrar a seção de nós requeridos
     while (getline(arquivo, linha)) {
         if (linha.find("ReN.") != string::npos) break;
     }
 
+    // Lê os nós requeridos
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("ReE.") != string::npos) break;
         if (linha[0] == 'N') {
@@ -52,6 +69,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
         }
     }
 
+    // Lê as arestas requeridas
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("EDGE") != string::npos) break;
         if (linha[0] == 'E') {
@@ -63,6 +81,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
         }
     }
 
+    // Lê as arestas não requeridas
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("ReA.") != string::npos) break;
         if (isdigit(linha[0])) {
@@ -73,6 +92,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
         }
     }
 
+    // Lê os arcos requeridos (direcionados)
     while (getline(arquivo, linha)) {
         if (linha.empty() || linha.find("ARC") != string::npos) break;
         if (linha[0] == 'A') {
@@ -84,6 +104,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
         }
     }
 
+    // Lê os arcos não requeridos
     while (getline(arquivo, linha)) {
         if (linha.empty()) break;
         if (linha.substr(0, 3) == "NrA") {
@@ -98,6 +119,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
     arquivo.close();
 }
 
+// Função principal que processa o grafo de um arquivo e calcula métricas
 void processarArquivo(const string& nomeArquivo) {
     map<int, No> nos;
     vector<Aresta> arestas;
@@ -110,11 +132,14 @@ void processarArquivo(const string& nomeArquivo) {
     int num_arestas = 0, num_arcos = 0;
     map<int, vector<pair<int, int>>> adjacencia;
 
+    // Construção da lista de adjacência
     for (auto& a : arestas) {
         conjunto_nos.insert(a.origem);
         conjunto_nos.insert(a.destino);
         adjacencia[a.origem].push_back({a.destino, a.custo});
-        if (!a.direcionada) adjacencia[a.destino].push_back({a.origem, a.custo});
+        if (!a.direcionada)
+            adjacencia[a.destino].push_back({a.origem, a.custo});
+
         if (a.direcionada) {
             num_arcos++;
             if (a.requerido) num_arcos_requeridos++;
@@ -124,15 +149,18 @@ void processarArquivo(const string& nomeArquivo) {
         }
     }
 
+    // Contagem de nós requeridos
     for (auto& [id, no] : nos) {
         conjunto_nos.insert(id);
         if (no.requerido) num_nos_requeridos++;
     }
 
+    // Cálculo da densidade
     int V = conjunto_nos.size();
     int total_conexoes = num_arestas + num_arcos;
     double densidade = (double)total_conexoes / (V * (V - 1));
 
+    // Cálculo dos graus
     map<int, int> graus;
     for (auto& [u, vizinhos] : adjacencia) {
         graus[u] += vizinhos.size();
@@ -145,19 +173,16 @@ void processarArquivo(const string& nomeArquivo) {
         grau_max = max(grau_max, g);
     }
 
+    // Inicialização das distâncias para Floyd-Warshall
     map<int, map<int, int>> dist, pred;
     for (int u : conjunto_nos) {
         for (int v : conjunto_nos) {
-            if (u == v) {
-                dist[u][v] = 0;
-                pred[u][v] = -1;
-            } else {
-                dist[u][v] = INFINITO;
-                pred[u][v] = -1;
-            }
+            dist[u][v] = (u == v) ? 0 : INFINITO;
+            pred[u][v] = -1;
         }
     }
 
+    // Preenche com os custos diretos
     for (auto& [u, vizinhos] : adjacencia) {
         for (auto& [v, custo] : vizinhos) {
             dist[u][v] = min(dist[u][v], custo);
@@ -165,19 +190,20 @@ void processarArquivo(const string& nomeArquivo) {
         }
     }
 
+    // Algoritmo de Floyd-Warshall para caminho mínimo entre todos os pares
     for (int k : conjunto_nos) {
         for (int i : conjunto_nos) {
             for (int j : conjunto_nos) {
-                if (dist[i][k] < INFINITO && dist[k][j] < INFINITO) {
-                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
-                        dist[i][j] = dist[i][k] + dist[k][j];
-                        pred[i][j] = pred[k][j];
-                    }
+                if (dist[i][k] < INFINITO && dist[k][j] < INFINITO &&
+                    dist[i][j] > dist[i][k] + dist[k][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                    pred[i][j] = pred[k][j];
                 }
             }
         }
     }
 
+    // Cálculo da intermediacao
     map<int, int> intermediacao;
     for (int origem : conjunto_nos) {
         for (int destino : conjunto_nos) {
@@ -191,6 +217,7 @@ void processarArquivo(const string& nomeArquivo) {
         }
     }
 
+    // Calcula diâmetro
     double soma = 0;
     int pares = 0, diametro = 0;
     for (int i : conjunto_nos) {
@@ -203,8 +230,10 @@ void processarArquivo(const string& nomeArquivo) {
         }
     }
 
+    // Calcula Caminho Médio
     double caminho_medio = soma / pares;
 
+    // Impressão dos resultados
     cout << fixed << setprecision(4);
     cout << "1. Quantidade de vertices: " << V << endl;
     cout << "2. Quantidade de arestas: " << num_arestas << endl;
@@ -215,17 +244,42 @@ void processarArquivo(const string& nomeArquivo) {
     cout << "7. Densidade: " << densidade << endl;
     cout << "8. Grau minimo: " << grau_min << endl;
     cout << "9. Grau maximo: " << grau_max << endl;
-    cout << "10. Intermediacao (simplificada):" << endl;
-    for (auto& [no,valor] : intermediacao) {
+    cout << "10. Intermediacao:" << endl;
+    for (auto& [no, valor] : intermediacao) {
         cout << "   No " << no << ": " << valor << endl;
     }
     cout << "11. Caminho medio: " << caminho_medio << endl;
     cout << "12. Diametro: " << diametro << endl;
+
+    // Exportar grafo para visualização em Python
+    string nomeSaida = nomeArquivo + ".txt";
+    ofstream saida(nomeSaida);
+    if (!saida.is_open()) {
+        cerr << "Erro ao criar arquivo de visualização: " << nomeSaida << endl;
+        return;
+    }
+
+    saida << "V: ";
+    for (int v : conjunto_nos) {
+        saida << v << " ";
+    }
+    saida << "\nE: ";
+    for (const auto& a : arestas) {
+        // Exporta arestas e arcos como pares
+        saida << "(" << a.origem << "," << a.destino << ") ";
+        if (!a.direcionada) {
+            // Se não for direcionada, adiciona também o inverso para simetria
+            saida << "(" << a.destino << "," << a.origem << ") ";
+        }
+    }
+    saida << endl;
+    saida.close();
 }
+
 
 int main() {
     vector<string> arquivos = {
-        "BHW1.dat", "CBMix11.dat", "CBMix12.dat", "BHW2.dat", "CBMix19.dat", "CBMix16.dat"
+        "BHW6.dat", "BHW2.dat", "BHW3.dat", "BHW4.dat"
     };
 
     for (const string& nomeArquivo : arquivos) {
