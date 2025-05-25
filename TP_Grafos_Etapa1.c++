@@ -1,7 +1,7 @@
 /*
  * Autor: Izac Moreira e Nadson Matos
  * Curso: Sistemas de Informação
- * Projeto: Trabalho Prático - Grafos -  Etapa 2 
+ * Projeto: Trabalho Prático - Grafos -  Etapa 1 
  * Data: 11 de abril de 2025
  * Descrição: Este programa lê arquivos de grafos no formato .dat,
  *            calcula métricas estruturais (grau, densidade, caminho médio, etc.),
@@ -24,7 +24,6 @@ using namespace std;
 
 // Definimos um valor grande para representar "infinito"
 const int INFINITO = 1e9;
-int CAPACIDADE_VEICULO = 999; // será lido do arquivo
 
 // Estrutura que representa um nó (vértice) do grafo
 struct No {
@@ -41,32 +40,6 @@ struct Aresta {
     bool requerido = false;
     bool direcionada = false;
 };
-
-struct ServicoRequerido {
-    int id, origem, destino;
-    int custo, demanda;
-    bool visitado;
-};
-
-struct Rota {
-    vector<ServicoRequerido> servicos;
-    int custo_total, demanda_total;
-};
-
-int extrairCapacidade(const string& nomeArquivo) {
-    ifstream arq(nomeArquivo);
-    string linha;
-    while (getline(arq, linha)) {
-        if (linha.find("Capacity:") != string::npos) {
-            stringstream ss(linha);
-            string temp;
-            int capacidade;
-            ss >> temp >> capacidade;
-            return capacidade;
-        }
-    }
-    return 999;
-}
 
 // Função para ler um arquivo .dat e preencher as estruturas de nós e arestas
 void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& arestas) {
@@ -144,33 +117,6 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
     }
 
     arquivo.close();
-}
-
-// Identifica todos os serviços requeridos 
-vector<ServicoRequerido> identificarServicos(const vector<Aresta>& arestas, const map<int, No>& nos) {
-    vector<ServicoRequerido> servicos;
-    int id = 1;
-
-    // 1. Adiciona nós requeridos
-    for (const auto& [_, no] : nos) {
-        if (no.requerido && no.demanda > 0) {
-            servicos.push_back({id, no.id, no.id, 0, no.demanda, false});
-            cout << "  Serviço ID " << id << " (NO " << no.id << ")\n";
-            id++;
-        }
-    }
-
-    // 2. Adiciona arestas e arcos requeridos
-    for (const auto& a : arestas) {
-        if (a.requerido && a.demanda > 0) {
-            servicos.push_back({id, a.origem, a.destino, a.custo, a.demanda, false});
-            cout << "  Serviço ID " << id << " (ARESTA/ARCO " << a.origem << " → " << a.destino << ")\n";
-            id++;
-        }
-    }
-
-
-    return servicos;
 }
 
 // Função principal que processa o grafo de um arquivo e calcula métricas
