@@ -1,8 +1,9 @@
-# Trabalho Prático - Grafos - Etapa 1
+# Trabalho Prático - Grafos - Etapa 1 e Etapa 2
 
-Este repositório contém dois programas desenvolvidos como parte da disciplina **GCC262 - Grafos e suas Aplicações** do curso de Sistemas de Informação. O objetivo é analisar e visualizar grafos por meio de duas abordagens complementares:
+Este repositório contém três programas desenvolvidos como parte da disciplina **GCC262 - Grafos e suas Aplicações** do curso de Sistemas de Informação. O objetivo é analisar, visualizar e resolver instâncias de roteamento com grafos por meio de abordagens complementares:
 
 - **TP_Grafos_Etapa1**: Um programa em C++ que realiza o processamento de grafos, extraindo métricas estruturais e exportando resultados.
+- **TP_Grafos_Etapa2**: Um programa em C++ que aplica uma heurística para resolver problemas de roteamento de veículos (CARP), com base nas instâncias em arquivos `.dat`.
 - **Visualiza_Grafos**: Um notebook em Python (Jupyter) que desenha visualmente os grafos a partir dos arquivos processados no "TP_Grafos_Etapa1".
 
 ## Estrutura da pasta do Projeto
@@ -16,6 +17,8 @@ Este repositório contém dois programas desenvolvidos como parte da disciplina 
 **TP_Grafos_Etapa1.c++** Código-fonte do programa. 
 
 **TP_Grafos_Etapa1.exe** Executável do programa.
+
+**TP_Grafos_Etapa2.cpp** Código-fonte da Etapa 2 do programa. 
 
 **Visualiza_Grafos.ipynb**cNotebook Jupyter do programa de vizualização de grafos.
 
@@ -79,8 +82,48 @@ Visualiza_Grafos.ipynb
 2. Na seção de arquivos do código no Jupyter, **adicione manualmente os .txt gerados pelo "TP_Grafos_Etapa1"**.
 3. Execute o código para visualizar os grafos desenhados.
 
+## TP_Grafos_Etapa2 (C++)
+
+### Arquivo principal:
+TP_Grafos_Etapa2.cpp
+
+### Requisitos:
+Compilador C++ compatível (ex: g++ ou compilador do Visual Studio Code)
+
+### Como executar:
+1. Compile o arrquivo se necessário:
+````
+g++ TP_Grafos_Etapa2.cpp -o TP_Grafos_Etapa2
+````
+2. Execute o programa:
+````
+./TP_Grafos_Etapa2
+````
+3. Verifique o arquivo de saída gerado com a solução formatada.
+
+4. O programa irá:
+
+- Ler um arquivo de entrada com dados do grafo (vértices, arestas e custos).
+
+- Executar um algoritmo para roteirização (ex: variação do algoritmo de caminho mínimo).
+
+- Gerar como saída um arquivo com as seguintes informações:
+
+    - Triplas (X i,j,k) indicando os arcos utilizados por rota.
+
+    - Custo total da solução.
+
+    - Demandas atendidas por rota.
+
+    - Vértices visitados.
+
 ## Autores
 - Izac Moreira
 - Nadson Matos
 - Curso: Sistemas de Informação
-- Data: 11 de abril de 2025
+- Data: 26 de maio de 2025
+
+
+
+
+
