@@ -1,3 +1,13 @@
+/*
+ * Autor: Izac Moreira e Nadson Matos
+ * Curso: Sistemas de Informação
+ * Projeto: Trabalho Prático - Grafos -  Etapa 2
+ * Data: 26 de maio de 2025
+ * Descrição: Este programa lê arquivos de instâncias no formato .dat relacionados a problemas de roteamento,
+ *            identifica os serviços obrigatórios (com demanda), aplica o algoritmo de Floyd-Warshall para
+ *            obter os menores caminhos entre nós, constrói rotas utilizando uma heurística gulosa respeitando
+ *            a capacidade dos veículos, e exporta os resultados em um arquivo de solução no formato especificado.Ex:“sol-BHW1.dat”.
+ */
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,39 +22,39 @@
 
 using namespace std;
 using namespace chrono;
-namespace fs = filesystem;
+namespace fs = filesystem; //Apelido para facilitar o uso de funcoes de arquivos
 
-// Capacidade do veículo (será lida do arquivo de entrada)
+//Capacidade padrao, sobrescrita ao ler arquivo
 int CAPACIDADE_VEICULO = 999;
 
-// Estrutura de um nó (vértice) do grafo
+//Estrutura que representa um no (vertice) do grafo
 struct No {
     int id;
     int demanda;
-    bool requerido;
+    bool requerido; //Indica se o no eh um ponto de servico obrigatorio
 };
 
-// Estrutura de uma aresta ou arco do grafo
+//Estrutura que representa aresta ou arco do grafo
 struct Aresta {
     int origem, destino;
     int custo, demanda;
-    bool requerido;
-    bool direcionada;
+    bool requerido; //Se representa uma aresta obrigatoria
+    bool direcionada; //Se eh uma aresta direcionada (arco)
 };
 
-// Estrutura de um serviço requerido (nó, aresta ou arco com demanda)
+//Estrutura de um servico requerido (no, aresta ou arco com demanda)
 struct ServicoRequerido {
     int id, origem, destino, custo, demanda;
-    bool visitado;
+    bool visitado; //Para controle durante a construcao das rotas
 };
 
-// Estrutura que representa uma rota completa de um veículo
+//Estrutura que representa uma rota completa de um veiculo com os sservicos acumulados
 struct Rota {
     vector<ServicoRequerido> servicos;
     int custo_total = 0, demanda_total = 0;
 };
 
-// Algoritmo de Floyd-Warshall para pré-computar as menores distâncias entre pares de nós
+//Algoritmo de Floyd-Warshall(Aproveitado da etapa 1)  para o calculo de menores distancias entre todos os pares de nos
 map<int, map<int, int>> floydWarshall(const vector<Aresta>& arestas) {
     map<int, map<int, int>> dist;
     for (const auto& a : arestas) {
@@ -65,7 +75,7 @@ map<int, map<int, int>> floydWarshall(const vector<Aresta>& arestas) {
     return dist;
 }
 
-// Extrai a capacidade do veículo a partir do arquivo de entrada
+//Aqui e extraida a capacidade do veiculo a partir do arquivo de entrada
 int extrairCapacidade(const string& nomeArquivo) {
     ifstream arq(nomeArquivo);
     string linha;
@@ -81,7 +91,7 @@ int extrairCapacidade(const string& nomeArquivo) {
     return 999;
 }
 
-// Lê os dados do arquivo e popula os nós e as arestas/arcos
+//Leitura do arquivo de entrada e construcao das estruturas
 void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& arestas) {
     ifstream arquivo(nomeArquivo);
     if (!arquivo.is_open()) return;
@@ -141,9 +151,10 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
     }
 }
 
-// Identifica todos os serviços requeridos (demanda > 0 e requerido)
+//Identificacao dos servicos requeridos onde constroi a lista de tarefas que precisam ser atendidas (nos e arestas com demanda > 0).
 vector<ServicoRequerido> identificarServicos(const vector<Aresta>& arestas, const map<int, No>& nos) {
     vector<ServicoRequerido> servicos;
+    //Atribui um ID unico para cada servico.
     int id = 1;
     for (const auto& [_, no] : nos) {
         if (no.requerido && no.demanda > 0) {
@@ -160,11 +171,11 @@ vector<ServicoRequerido> identificarServicos(const vector<Aresta>& arestas, cons
     return servicos;
 }
 
-// Constrói rotas usando uma heurística gulosa com critério de custo/distância/demanda
+//Neste trecho e utilizada uma heuristica gulosa para construir rotas
 vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Aresta>& arestas) {
     vector<Rota> rotas;
     auto dist = floydWarshall(arestas);
-    int atual = 0; // depósito
+    int atual = 0; // deposito
 
     while (true) {
         Rota rota;
@@ -210,16 +221,16 @@ vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Are
     return rotas;
 }
 
-// as outras funções permanecem inalteradas
+//Exporta a solucao encontrada para arquivo
 
 void exportarSolucao(const string& nomeInstancia, const vector<Rota>& rotas, long long clocks_execucao, long long clocks_solucao) {
-    fs::create_directory("solucoes");
+    fs::create_directory("solucoes"); //Cria pasta solucoes se ainda nao existir
     string nome = "solucoes/sol-" + nomeInstancia;
     ofstream out(nome.c_str());
     if (!out.is_open()) return;
     int custo_total = 0;
     for (const auto& r : rotas) custo_total += r.custo_total;
-
+    //Escreve:Custo total da solucao; numero de rotas; Tempo total e tempo apenas da construcao da solucao; Detalhes de cada rota: demanda, custo, sequencia de servicos.
     out << custo_total << "\n";
     out << rotas.size() << "\n";
     out << clocks_execucao << "\n";
@@ -233,14 +244,14 @@ void exportarSolucao(const string& nomeInstancia, const vector<Rota>& rotas, lon
         }
         out << " (D 0,1,1)\n";
     }
-
+    //Exibe um resumo no console
     cout << "Resumo dos custos por rota (" << nomeInstancia << "):\n";
     for (size_t i = 0; i < rotas.size(); i++) {
         cout << "  Rota " << (i + 1) << ": custo = " << rotas[i].custo_total << ", demanda = " << rotas[i].demanda_total << "\n";
     }
     cout << "Custo total: " << custo_total << "\n";
 }
-
+//Funcao de processamento de uma instancia
 void processarArquivo(const string& nomeArquivo) {
     auto inicio_total = high_resolution_clock::now();
 
