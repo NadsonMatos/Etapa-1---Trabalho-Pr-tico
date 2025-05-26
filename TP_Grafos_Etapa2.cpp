@@ -14,14 +14,17 @@ using namespace std;
 using namespace chrono;
 namespace fs = filesystem;
 
-int CAPACIDADE_VEICULO = 999; // será lido do arquivo
+// Capacidade do veículo (será lida do arquivo de entrada)
+int CAPACIDADE_VEICULO = 999;
 
+// Estrutura de um nó (vértice) do grafo
 struct No {
     int id;
     int demanda;
     bool requerido;
 };
 
+// Estrutura de uma aresta ou arco do grafo
 struct Aresta {
     int origem, destino;
     int custo, demanda;
@@ -29,16 +32,40 @@ struct Aresta {
     bool direcionada;
 };
 
+// Estrutura de um serviço requerido (nó, aresta ou arco com demanda)
 struct ServicoRequerido {
     int id, origem, destino, custo, demanda;
     bool visitado;
 };
 
+// Estrutura que representa uma rota completa de um veículo
 struct Rota {
     vector<ServicoRequerido> servicos;
     int custo_total = 0, demanda_total = 0;
 };
 
+// Algoritmo de Floyd-Warshall para pré-computar as menores distâncias entre pares de nós
+map<int, map<int, int>> floydWarshall(const vector<Aresta>& arestas) {
+    map<int, map<int, int>> dist;
+    for (const auto& a : arestas) {
+        dist[a.origem][a.origem] = 0;
+        dist[a.destino][a.destino] = 0;
+        dist[a.origem][a.destino] = a.custo;
+        if (!a.direcionada)
+            dist[a.destino][a.origem] = a.custo;
+    }
+    for (const auto& [k, _] : dist)
+        for (const auto& [i, _1] : dist)
+            for (const auto& [j, _2] : dist)
+                if (dist[i].count(k) && dist[k].count(j)) {
+                    int via_k = dist[i][k] + dist[k][j];
+                    if (!dist[i].count(j) || via_k < dist[i][j])
+                        dist[i][j] = via_k;
+                }
+    return dist;
+}
+
+// Extrai a capacidade do veículo a partir do arquivo de entrada
 int extrairCapacidade(const string& nomeArquivo) {
     ifstream arq(nomeArquivo);
     string linha;
@@ -54,6 +81,7 @@ int extrairCapacidade(const string& nomeArquivo) {
     return 999;
 }
 
+// Lê os dados do arquivo e popula os nós e as arestas/arcos
 void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& arestas) {
     ifstream arquivo(nomeArquivo);
     if (!arquivo.is_open()) return;
@@ -113,6 +141,7 @@ void lerArquivo(const string& nomeArquivo, map<int, No>& nos, vector<Aresta>& ar
     }
 }
 
+// Identifica todos os serviços requeridos (demanda > 0 e requerido)
 vector<ServicoRequerido> identificarServicos(const vector<Aresta>& arestas, const map<int, No>& nos) {
     vector<ServicoRequerido> servicos;
     int id = 1;
@@ -131,9 +160,12 @@ vector<ServicoRequerido> identificarServicos(const vector<Aresta>& arestas, cons
     return servicos;
 }
 
+// Constrói rotas usando uma heurística gulosa com critério de custo/distância/demanda
 vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Aresta>& arestas) {
     vector<Rota> rotas;
+    auto dist = floydWarshall(arestas);
     int atual = 0; // depósito
+
     while (true) {
         Rota rota;
         int carga = 0;
@@ -144,15 +176,7 @@ vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Are
             for (size_t i = 0; i < servicos.size(); ++i) {
                 if (servicos[i].visitado || servicos[i].demanda + carga > CAPACIDADE_VEICULO) continue;
 
-                int desloc = servicos[i].custo;
-                for (const auto& a : arestas) {
-                    if ((a.origem == atual && a.destino == servicos[i].origem) ||
-                        (!a.direcionada && a.destino == atual && a.origem == servicos[i].origem)) {
-                        desloc = a.custo;
-                        break;
-                    }
-                }
-
+                int desloc = dist[atual][servicos[i].origem];
                 double criterio = static_cast<double>(desloc + servicos[i].custo) / (1 + servicos[i].demanda);
 
                 if (criterio < melhor_criterio) {
@@ -167,7 +191,7 @@ vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Are
             s.visitado = true;
             rota.servicos.push_back(s);
             rota.demanda_total += s.demanda;
-            rota.custo_total += s.custo;
+            rota.custo_total += s.custo + dist[atual][s.origem];
             carga += s.demanda;
             atual = s.destino;
         }
@@ -185,6 +209,8 @@ vector<Rota> construirRotas(vector<ServicoRequerido>& servicos, const vector<Are
     }
     return rotas;
 }
+
+// as outras funções permanecem inalteradas
 
 void exportarSolucao(const string& nomeInstancia, const vector<Rota>& rotas, long long clocks_execucao, long long clocks_solucao) {
     fs::create_directory("solucoes");
