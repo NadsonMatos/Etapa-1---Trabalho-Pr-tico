@@ -1,129 +1,124 @@
-# Trabalho Prático - Grafos - Etapa 1 e Etapa 2
+# Trabalho Prático - Grafos - Etapa 1, 2 e 3
 
-Este repositório contém três programas desenvolvidos como parte da disciplina **GCC262 - Grafos e suas Aplicações** do curso de Sistemas de Informação. O objetivo é analisar, visualizar e resolver instâncias de roteamento com grafos por meio de abordagens complementares:
+Este repositório contém os programas desenvolvidos para a disciplina **GCC262 - Grafos e suas Aplicações** do curso de Sistemas de Informação. O projeto é dividido em três etapas complementares para analisar, visualizar e resolver problemas de roteamento em grafos.
 
-- **TP_Grafos_Etapa1**: Um programa em C++ que realiza o processamento de grafos, extraindo métricas estruturais e exportando resultados.
-- **TP_Grafos_Etapa2**: Um programa em C++ que aplica uma heurística para resolver problemas de roteamento de veículos (CARP), com base nas instâncias em arquivos `.dat`.
-- **Visualiza_Grafos**: Um notebook em Python (Jupyter) que desenha visualmente os grafos a partir dos arquivos processados no "TP_Grafos_Etapa1".
+  - **Etapa 1**: Um programa em C++ que realiza o processamento de grafos, extraindo métricas estruturais.
+  - **Etapa 2**: Um programa em C++ que aplica uma heurística construtiva simples para resolver problemas de roteamento.
+  - **Etapa 3 (Resolvedor Avançado)**: Evolução da Etapa 2, este programa implementa uma **meta-heurística híbrida de alto desempenho** para encontrar soluções de alta qualidade para o problema de roteamento.
+  - **Visualiza\_Grafos**: Um notebook em Python (Jupyter) que desenha visualmente os grafos.
 
-## Estrutura da pasta do Projeto
+## Estrutura do Projeto
 
-**vscode/** Arquivos do vscode como settings.json para executar o   código.
+  - **`output/`**: Pasta contendo os arquivos de instância `.dat` para teste.
+  - **`solucoes/`**: Pasta criada automaticamente pelo programa da Etapa 3, onde as soluções (`sol-*.txt`) são salvas.
+  - **`TP_Grafos_Etapa1.cpp`**: Código-fonte do programa de análise estrutural.
+  - **`TP_Grafos_Etapa3.cpp`**: Código-fonte do resolvedor de roteamento avançado.
+  - **`Visualiza_Grafos.ipynb`**: Notebook Jupyter para a visualização gráfica.
+  - **`README.md`**: Este arquivo.
 
-**output/** Pasta onde estão localizados os arquivos .dat para uso de teste.
-                    
-**README.md** Este arquivo.
+-----
 
-**TP_Grafos_Etapa1.c++** Código-fonte do programa. 
-
-**TP_Grafos_Etapa1.exe** Executável do programa.
-
-**TP_Grafos_Etapa2.cpp** Código-fonte da Etapa 2 do programa. 
-
-**Visualiza_Grafos.ipynb**cNotebook Jupyter do programa de vizualização de grafos.
-
-
-## TP_Grafos_Etapa1 (C++)
+## TP\_Grafos\_Etapa1 (Análise de Grafos)
 
 ### Arquivo principal:
-TP_Grafos_Etapa1.c++
+
+`TP_Grafos_Etapa1.cpp`
+
+### Descrição:
+
+Este programa lê instâncias de grafos e calcula diversas métricas estruturais para análise.
 
 ### Requisitos:
-Compilador C++ compatível (ex: g++ ou compilador do Visual Studio Code)
+
+  - Compilador C++ compatível (g++, Clang, MSVC).
 
 ### Como executar:
-1. Compile o arquivo se necessário:
-   ````
-    g++ TP_Grafos_Etapa1.c++ -o TP_Grafos_Etapa1
-   ````
-2. Execute o programa:
-   ```
-   ./TP_Grafos_Etapa1
-   ```
-3. **Atenção**: Antes de executar,**é necessário** abrir o código e **adicionar manualmente os nomes dos arquivos .dat que deseja executar** no vetor arquivos[].
 
-4. O programa irá:
+1.  **Atenção**: É necessário abrir o código e **adicionar manualmente os nomes dos arquivos `.dat`** que deseja analisar no vetor `arquivos[]`.
+2.  Compile o arquivo:
+    ```bash
+    g++ TP_Grafos_Etapa1.cpp -o TP_Grafos_Etapa1
+    ```
+3.  Execute o programa:
+    ```bash
+    ./TP_Grafos_Etapa1
+    ```
+4.  O programa irá calcular e exibir no console as seguintes métricas para cada grafo:
+      - Quantidade de vértices, arestas e arcos (requeridos e não requeridos).
+      - Densidade do grafo.
+      - Grau mínimo e máximo.
+      - E outras métricas como intermediação, caminho médio e diâmetro.
 
-- Ler os arquivos .dat
+-----
 
-- Calcular as seguintes métricas:
-
-        1. Quantidade de vértices;
-        2. Quantidade de arestas;
-        3. Quantidade de arcos;
-        4. Quantidade de vértices requeridos;
-        5. Quantidade de arestas requeridas;
-        6. Quantidade de arcos requeridos;
-        7. Densidade do grafo (order strength);
-        8. Grau mínimo dos vértices;
-        9. Grau máximo dos vértices;
-        10. Intermediação;
-        11. Caminho médio;
-        12. Diâmetro.
-
-- Exibir os resultados no console
-
-- Gerar arquivos .txt com os dados que foram processsdos retirados da pasta output/
-
-## Visualiza_Grafos (Python / Jupyter Notebook)
+## TP\_Grafos\_Etapa3 (Resolvedor de Roteamento)
 
 ### Arquivo principal:
-Visualiza_Grafos.ipynb
+
+`TP_Grafos_Etapa3.cpp`
+
+### Descrição:
+
+Este é um resolvedor avançado que aplica uma meta-heurística híbrida para encontrar soluções de alta qualidade para o Problema de Roteamento de Veículos Capacitado com Serviços em Nós e Arcos.
+
+A arquitetura do algoritmo é composta por:
+
+  - **Heurística de Construção:** **Clarke & Wright (Savings)** para gerar uma solução inicial focada em minimizar o número de veículos.
+  - **Busca Local:** **Variable Neighborhood Descent (VND)**, que explora sistematicamente 4 tipos de movimentos para refinar a solução: `Relocate`, `Swap`, `2-Opt` e `(2,1)-Exchange`.
+  - **Meta-heurística Global:** **Iterated Local Search (ILS)**, que usa uma perturbação poderosa para escapar de ótimos locais e explorar o espaço de busca de forma ampla.
+  - **Mecanismo de Perturbação:** **Large Neighborhood Search (LNS)**, que "destrói" uma parte da solução e a "repara" de forma inteligente.
 
 ### Requisitos:
-- Python 3
-- Jupyter Notebook instalado(navegador ou vs code)
-- Biblioteca matplotlib instalada:
-  ```bash
-  pip install matplotlib
-  ```
-### Como executar:
-1. Abra o arquivo **Visualiza_Grafos.ipynb** com o Jupyter (via navegador ou VS Code).
-2. Na seção de arquivos do código no Jupyter, **adicione manualmente os .txt gerados pelo "TP_Grafos_Etapa1"**.
-3. Execute o código para visualizar os grafos desenhados.
 
-## TP_Grafos_Etapa2 (C++)
+  - Compilador C++17 ou superior (devido ao uso de `<filesystem>`).
+
+### Como executar:
+
+1.  Coloque todos os arquivos de instância (`.dat`) na mesma pasta que o executável.
+2.  Compile o arquivo:
+    ```bash
+    g++ -std=c++17 TP_Grafos_Etapa3.cpp -o TP_Grafos_Etapa3
+    ```
+3.  Execute o programa. Ele irá **automaticamente** encontrar e processar todos os arquivos `.dat` na pasta.
+    ```bash
+    ./TP_Grafos_Etapa3
+    ```
+4.  O programa irá:
+      - Para cada instância, aplicar a sequência `Savings -> VND -> ILS` para encontrar uma solução otimizada.
+      - Gerar um arquivo de solução formatado na pasta `solucoes/` (ex: `solucoes/sol-BHW1.txt`).
+      - Exibir no console um resumo da solução final e as estatísticas de performance dos operadores da busca local.
+
+-----
+
+## Visualiza\_Grafos (Python)
 
 ### Arquivo principal:
-TP_Grafos_Etapa2.cpp
+
+`Visualiza_Grafos.ipynb`
+
+### Descrição:
+
+Um notebook Jupyter que utiliza a biblioteca `matplotlib` para desenhar os grafos, oferecendo uma representação visual das instâncias.
 
 ### Requisitos:
-Compilador C++ compatível (ex: g++ ou compilador do Visual Studio Code)
+
+  - Python 3
+  - Jupyter Notebook ou Jupyter Lab
+  - Bibliotecas: `matplotlib`
+    ```bash
+    pip install matplotlib jupyterlab
+    ```
 
 ### Como executar:
-1. Compile o arrquivo se necessário:
-````
-g++ TP_Grafos_Etapa2.cpp -o TP_Grafos_Etapa2
-````
-2. Execute o programa:
-````
-./TP_Grafos_Etapa2
-````
-3. Verifique o arquivo de saída gerado com a solução formatada.
 
-4. O programa irá:
-
-- Ler um arquivo de entrada com dados do grafo (vértices, arestas e custos).
-
-- Executar um algoritmo para roteirização (ex: variação do algoritmo de caminho mínimo).
-
-- Gerar como saída um arquivo com as seguintes informações:
-
-    - Triplas (X i,j,k) indicando os arcos utilizados por rota.
-
-    - Custo total da solução.
-
-    - Demandas atendidas por rota.
-
-    - Vértices visitados.
+1.  Inicie o Jupyter Lab/Notebook no seu terminal.
+2.  Abra o arquivo `Visualiza_Grafos.ipynb`.
+3.  Na célula de código apropriada, **informe o nome do arquivo da instância** que deseja visualizar.
+4.  Execute as células do notebook para gerar e exibir o grafo.
 
 ## Autores
-- Izac Moreira
-- Nadson Matos
-- Curso: Sistemas de Informação
-- Data: 26 de maio de 2025
 
-
-
-
-
+  - Izac Moreira
+  - Nadson Matos
+  - **Curso:** Sistemas de Informação
+  - **Data da Versão Final:** 28 de junho de 2025
